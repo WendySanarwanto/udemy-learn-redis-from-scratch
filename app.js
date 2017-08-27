@@ -34,10 +34,12 @@ app.get('/', (req, res) => {
     const title = "Task List";
 
     redis_client.lrange('tasks', 0, -1, (err, reply) => {
-        
-        res.render('index', { 
-            title: title,
-            tasks: reply
+        redis_client.hgetall('call', (err, call) =>{
+            res.render('index', { 
+                title: title,
+                tasks: reply,
+                call: call
+            });    
         });
     });
 });
@@ -69,6 +71,25 @@ app.post('/task/delete', (req, res) => {
         }
         res.redirect('/');
     });
+});
+
+app.post('/call/add', (req, res) => {
+    const newCall = {};
+
+     newCall.name = req.body.name;
+     newCall.company = req.body.company;
+     newCall.phone = req.body.phone;
+     newCall.time = req.body.time;
+
+     redis_client.HMSET('call', 
+        ['name', newCall.name, 'company', newCall.company,
+         'phone', newCall.phone, 'time', newCall.time], (err, response) => {
+            if (err) {
+                console.log(err);
+            }
+            console.log(response);
+            res.redirect('/');
+         });
 });
 
 // start the http server
