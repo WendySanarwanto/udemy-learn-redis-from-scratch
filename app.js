@@ -22,9 +22,38 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(public_path));
 
+// Create Redis client
+const redis_client = redis.createClient();
+
+redis_client.on('connect', () => {
+    console.log(`Redis server connected ...`);
+});
+
 // setup routes
 app.get('/', (req, res) => {
-    res.send('Greetings!');
+    const title = "Task List";
+
+    redis_client.lrange('tasks', 0, -1, (err, reply) => {
+        
+        res.render('index', { 
+            title: title,
+            tasks: reply
+        });
+    });
+});
+
+app.post('/task/add', (req, res) =>{
+    const task = req.body.task;
+
+    redis_client.lpush('tasks', task, (err, reply) => {
+        if (err) {
+            console.log(err);
+        }
+        else {
+            console.log('Task Added');
+        }
+        res.redirect('/');
+    });
 });
 
 // start the http server
