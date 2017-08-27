@@ -56,6 +56,21 @@ app.post('/task/add', (req, res) =>{
     });
 });
 
+app.post('/task/delete', (req, res) => {
+    const tasksToDel = req.body.tasks;
+    console.log(`tasksToDel = ${tasksToDel}`);
+    redis_client.lrange('tasks', 0, -1, (err, tasks) => {
+        for(let i=0; i<tasksToDel.length; i++){
+            if (tasks.indexOf(tasksToDel[i]) > -1){
+                redis_client.lrem('tasks', 0, tasksToDel[i], (err, response) => {
+                    console.log(err);
+                });
+            }
+        }
+        res.redirect('/');
+    });
+});
+
 // start the http server
 app.listen(server_port, server_hostname, 0, () => {
     console.log(`Server started on port ${server_port} ...`);
